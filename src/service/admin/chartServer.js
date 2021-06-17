@@ -36,3 +36,10 @@ export const chongmingm = data => request(
     data
   }
 )
+export const createZhuXingTu = data => request(
+  {
+    url: 'zhuxingtu',
+    method: "post",
+    data
+  }
+)

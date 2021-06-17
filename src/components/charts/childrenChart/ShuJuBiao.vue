@@ -8,6 +8,7 @@
       style="width: 100%; font-size: 12px"
       border
       size="mini"
+      v-loading="loading"
     >
       <el-table-column
         :prop="item"
@@ -42,6 +43,7 @@ export default {
       currentLimit: 100,
       count: 0,
       filterArr1: [],
+      loading: false,
     };
   },
   created() {
@@ -72,12 +74,7 @@ export default {
   methods: {
     getData() {
       // 加载动画
-      const loading = this.$loading({
-        lock: true,
-        text: "生成图表中...",
-        spinner: "el-icon-loading",
-        background: "rgba(0, 0, 0, 0.7)",
-      });
+      this.loading = true;
       const { currentPage, currentLimit, tableName, filterArr1 } = this;
       getShuJuBiao({
         page: currentPage,
@@ -92,7 +89,7 @@ export default {
         this.tableField = filterArr1.map((item) => {
           return item.column_name;
         });
-        loading.close();
+        this.loading = false;
       });
     },
     handleSizeChange(val) {
@@ -110,6 +107,7 @@ export default {
 <style scoped>
 .el-pagination {
   text-align: center;
-  padding-top: 15px;
+  padding: 10px 0px;
+  background-color: #fff;
 }
 </style>

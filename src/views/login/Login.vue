@@ -79,7 +79,6 @@ export default {
           });
           // 发送登录请求
           isLogin(this.ruleForm).then((res) => {
-            console.log(res);
             const { isLogin } = res.data;
             if (isLogin) {
               loading.close();

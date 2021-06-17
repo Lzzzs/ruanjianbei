@@ -16,7 +16,7 @@
       <div v-if="$route.params.tableName">
         <div class="top">
           <h3>{{ $route.params.tableName }}</h3>
-          <el-button type="primary" @click="createChart">生成图表</el-button>
+          <el-button type="primary" @click="createChart" :disabled="loading">生成图表</el-button>
         </div>
         <!-- 展示表格 -->
         <el-table
@@ -25,6 +25,7 @@
           height="510"
           style="width: 100%"
           border
+          v-loading="loading"
         >
           <el-table-column
             :prop="item"
@@ -63,6 +64,7 @@ export default {
       currentPage: 1,
       currentLimit: 100,
       count: 0,
+      loading: false
     };
   },
   created() {
@@ -81,12 +83,7 @@ export default {
   methods: {
     getData() {
       // 加载动画
-      const loading = this.$loading({
-        lock: true,
-        text: "数据正在赶来中...",
-        spinner: "el-icon-loading",
-        background: "rgba(0, 0, 0, 0.7)",
-      });
+      this.loading = true
       // 请求数据
       getTableData({
         page: this.currentPage,
@@ -98,7 +95,7 @@ export default {
         this.tableData = data;
         // 将字段取出
         this.tableField = Object.keys(res.data.data[0]);
-        loading.close();
+        this.loading = false
       });
     },
     tableClick(name, index) {

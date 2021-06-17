@@ -8,6 +8,7 @@
         size="mini"
         icon="el-icon-plus"
         style="margin: 5px 10px 8px"
+        @click="computedFieldClick"
         >计算字段</el-button
       >
       <ul class="ul-column">
@@ -34,19 +35,19 @@
         </draggable>
       </ul>
     </el-aside>
-    <el-aside width="252px" class="icon-detail">
-      <div class="detail-text">图表类型</div>
-      <div class="icons-group">
-        <icon-chart
-          v-for="(item, index) in iconNames"
-          :key="index"
-          :iconName="item"
-          @click.native="chooseChart(index)"
-          :class="currentChart === index ? 'active' : ''"
-        ></icon-chart>
+    <el-main style="padding: 2px 8px; background-color: #f7f8fa">
+      <div style="display: flex; align-items: center">
+        <div class="detail-text">图表类型</div>
+        <div class="icons-group">
+          <icon-chart
+            v-for="(item, index) in iconNames"
+            :key="index"
+            :iconName="item"
+            @click.native="chooseChart(index)"
+            :class="currentChart === index ? 'active' : ''"
+          ></icon-chart>
+        </div>
       </div>
-    </el-aside>
-    <el-main style="padding: 12px; background-color: #f7f8fa">
       <!-- 图表存放字段区 -->
       <div class="chart-column">
         <chart-field
@@ -69,6 +70,9 @@
           >
         </span>
       </el-dialog>
+
+      <!-- 计算字段对话框 -->
+      <computed-field :visible="computedDialog" @noticeChange="computedDialogChange"></computed-field>
     </el-main>
   </el-container>
 </template>
@@ -80,6 +84,7 @@ import IconChart from "@/components/charts/IconChart.vue";
 import ChartField from "@/components/charts/ChartField.vue";
 import WriteChart from "@/components/charts/WriteChart.vue";
 import FieldItem from "@/components/charts/FieldItem.vue";
+import ComputedField from "@/components/charts/ComputedField.vue";
 
 export default {
   data() {
@@ -89,17 +94,15 @@ export default {
       iconNames: [
         "#icon-zu",
         "#icon-zhuxingtu",
-        "#icon-pubutu",
         "#icon-zhexiantu",
-        "#icon-duidiezhexiantu",
         "#icon-mianjitu",
         "#icon-bingtu",
-        "#icon-meiguitu",
         "#icon-duoxiliesandiantu",
       ],
       currentChart: 0,
       targetChart: 0,
       dialogVisible: false,
+      computedDialog: false,
     };
   },
   components: {
@@ -108,6 +111,7 @@ export default {
     ChartField,
     WriteChart,
     FieldItem,
+    ComputedField,
   },
   mounted() {
     const loading = this.$loading({
@@ -119,6 +123,11 @@ export default {
     this.tableName = this.$route.query.tableName;
     getTableColumn(this.$route.query.tableName).then((res) => {
       const { data } = res;
+      if (data.msg === "false") {
+        this.$router.push("/admin/charts");
+        this.$message.warning("请求的表不存在, 请检查!");
+        return;
+      }
       this.tableColumn = data;
       // 数字的默认类型是求和
       data.map((item) => {
@@ -221,6 +230,13 @@ export default {
       this.tableColumn[index].type = type;
       this.$store.commit("setTableFields", this.tableColumn);
     },
+    // 计算字段按钮点击
+    computedFieldClick() {
+      this.computedDialog = !this.computedDialog
+    },
+    computedDialogChange(visible) {
+      this.computedDialog = visible
+    }
   },
 };
 </script>
@@ -244,10 +260,6 @@ export default {
 .ul-column.active {
   border: 1px solid rgb(49, 139, 241);
 }
-.icon-detail {
-  background-color: #f7f8fa;
-  border-right: 1px solid #e8eaed;
-}
 .icons-group {
   display: flex;
   flex-wrap: wrap;
@@ -259,7 +271,7 @@ export default {
   color: #3d4d66;
 }
 .write-chart {
-  height: 92%;
+  height: 80%;
   width: 100%;
 }
 /* 从左边拖到右边的样式 */

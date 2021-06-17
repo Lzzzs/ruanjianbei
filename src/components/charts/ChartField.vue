@@ -196,7 +196,7 @@ export default {
   background-color: #fff;
   border-radius: 4px;
   height: 30px;
-  margin-bottom: 15px;
+  margin-bottom: 5px;
   align-items: center;
   box-shadow: 0px 0px 3px rgb(49, 139, 241, 0.15);
   transition: box-shadow 0.15s ease-in-out;

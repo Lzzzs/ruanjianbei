@@ -1,5 +1,5 @@
 <template>
-  <li :class="isShow ? 'active' : ''">
+  <li :class="isShow ? 'active' : ''" :style="deleteDrop">
     <div style="display: flex">
       <svg
         class="icon"
@@ -23,6 +23,7 @@
       placement="bottom"
       :hide-on-click="false"
       @command="handleCommand"
+      v-show="!hideDropdownBtn"
     >
       <span class="el-dropdown-link">
         <i class="el-icon-caret-bottom"></i>
@@ -105,6 +106,11 @@ export default {
       type: Number,
       default: 0,
     },
+    // 是否隐藏下拉按钮
+    hideDropdownBtn: {
+      type: Boolean,
+      default: false
+    }
   },
   mounted() {
     this.currentName = this.tableFields[this.currentIndex].column_name;
@@ -125,6 +131,10 @@ export default {
     dialogTitle() {
       return `重命名${this.currentName}`;
     },
+    deleteDrop() {
+      // 如果不需要下拉菜单 则取消改组件获得焦点之后鼠标变成移动样式
+      return this.hideDropdownBtn ? 'cursor: pointer' : ''
+    }
   },
   methods: {
     getShow(isShow) {
