@@ -1,7 +1,7 @@
 <template>
   <div>
-    <!-- 数据表 -->
-    <div class="shujubiao" v-if="chart === 0">
+    <!-- 数据表和饼图 -->
+    <div class="shujubiao_bingtu" v-if="judgeChart">
       <div class="title">数据</div>
       <draggable
         v-model="arr1"
@@ -11,15 +11,19 @@
         @end="end"
         @start="start"
         ghostClass="ghost"
+        style="width: 100%; height: 30px"
       >
-        <transition-group style="display: flex; padding-left: 10px">
-          <li
-            :class="item.column_name === '请拖入左侧字段' ? 'forbid field' : 'field'"
+        <transition-group class="group">
+          <field-item
             v-for="(item, index) in arr1"
             :key="index"
+            :currentIndex="index"
+            :tableFields="outputTableFieldArr(arr1)"
+            :hideDropdownBtn="true"
+            class="field"
           >
             {{ item.column_name }}
-          </li>
+          </field-item>
         </transition-group>
       </draggable>
     </div>
@@ -36,15 +40,19 @@
           @end="end"
           @start="start"
           ghostClass="ghost"
+          style="width: 100%; height: 30px"
         >
-          <transition-group style="display: flex; padding-left: 10px">
-            <li
-              :class="item.column_name === '请拖入左侧字段' ? 'forbid field' : 'field'"
+          <transition-group class="group">
+            <field-item
               v-for="(item, index) in arr2"
               :key="index"
+              :currentIndex="index"
+              :tableFields="outputTableFieldArr(arr2)"
+              :hideDropdownBtn="true"
+              class="field"
             >
               {{ item.column_name }}
-            </li>
+            </field-item>
           </transition-group>
         </draggable>
       </div>
@@ -58,15 +66,19 @@
           @end="end"
           @start="start"
           ghostClass="ghost"
+          style="width: 100%; height: 30px"
         >
-          <transition-group style="display: flex; padding-left: 10px">
-            <li
-              :class="item.column_name === '请拖入左侧字段' ? 'forbid field' : 'field'"
+          <transition-group class="group">
+            <field-item
               v-for="(item, index) in arr3"
               :key="index"
+              :currentIndex="index"
+              :tableFields="outputTableFieldArr(arr3)"
+              :hideDropdownBtn="true"
+              class="field"
             >
               {{ item.column_name }}
-            </li>
+            </field-item>
           </transition-group>
         </draggable>
       </div>
@@ -76,35 +88,28 @@
 
 <script>
 import draggable from "vuedraggable";
+import FieldItem from "./FieldItem.vue";
 
 export default {
   data() {
     return {
-      arr1: [
-        {
-          column_name: "请拖入左侧字段",
-        },
-      ],
-      arr2: [
-        {
-          column_name: "请拖入左侧字段",
-        },
-      ],
-      arr3: [
-        {
-          column_name: "请拖入左侧字段",
-        },
-      ],
+      arr1: [],
+      arr2: [],
+      arr3: [],
     };
   },
   components: {
     draggable,
+    FieldItem,
   },
   props: {
     chart: {
       type: Number,
       default: 0,
     },
+  },
+  mounted() {
+    this.initializeArr();
   },
   computed: {
     // 监听vux的state中arr1的改变
@@ -117,16 +122,26 @@ export default {
     listenVuxArr3() {
       return this.$store.state.arr3;
     },
+    judgeChart() {
+      // 只有柱形图和饼图返回true 其他返回false
+      switch (this.chart) {
+        case 0:
+        case 1:
+          return true;
+        default:
+          return false;
+      }
+    },
   },
   watch: {
     arr1() {
-      this.listenData(this.arr1, "setArr1");
+      this.$store.commit("setArr1", this.arr1);
     },
     arr2() {
-      this.listenData(this.arr2, "setArr2");
+      this.$store.commit("setArr2", this.arr2);
     },
     arr3() {
-      this.listenData(this.arr3, "setArr3");
+      this.$store.commit("setArr3", this.arr3);
     },
     listenVuxArr1(newValue) {
       // 如果vux改变,则改组件也改变
@@ -140,34 +155,16 @@ export default {
       // 如果vux改变,则改组件也改变
       this.arr3 = newValue;
     },
+    chart() {
+      this.initializeArr();
+    },
   },
   methods: {
-    listenData(target, mutationName) {
-      if (mutationName === "setArr1" || mutationName === "setArr2") {
-        // 控制'请拖入左侧字段'的显示
-        const el = document.getElementsByClassName("forbid")[0];
-        if (target.length > 1) {
-          el.setAttribute("id", "hide");
-        } else {
-          el.removeAttribute("id");
-        }
-      }
-      if (mutationName === "setArr3") {
-        // 控制'请拖入左侧字段'的显示
-        const el = document.getElementsByClassName("forbid")[1];
-        if (target.length > 1) {
-          el.setAttribute("id", "hide");
-        } else {
-          el.removeAttribute("id");
-        }
-      }
-      this.$store.commit(mutationName, target);
-    },
     // 从右向左
     start() {
       // 刚开始拖拽高亮显示可拖拽区域
       document.getElementsByClassName("ul-column")[0].classList.add("active");
-      if (this.chart != 0) {
+      if (this.chart != 0 && this.chart != 1) {
         document.getElementsByClassName("x")[0].classList.add("active");
         document.getElementsByClassName("y")[0].classList.add("active");
       }
@@ -177,19 +174,36 @@ export default {
       document
         .getElementsByClassName("ul-column")[0]
         .classList.remove("active");
-      if (this.chart != 0) {
+      if (this.chart != 0 && this.chart != 1) {
         document.getElementsByClassName("x")[0].classList.remove("active");
         document.getElementsByClassName("y")[0].classList.remove("active");
       }
       // 传给父组件做去重
       this.$emit("rightToLeft");
     },
+    initializeArr() {
+      const { arr1, arr2, arr3 } = this.$store.state;
+      if (this.chart === 0 || this.chart === 1) {
+        this.arr1 = arr1;
+      } else {
+        this.arr2 = arr2;
+        this.arr3 = arr3;
+      }
+    },
+    // 输出tableField数组
+    outputTableFieldArr(a) {
+      let arr = [];
+      a.map((i) => {
+        arr.push(i);
+      });
+      return arr;
+    },
   },
 };
 </script>
 
 <style scoped>
-.shujubiao {
+.shujubiao_bingtu {
   display: flex;
   font-size: 13px;
   color: #3d4d66;
@@ -201,17 +215,23 @@ export default {
   box-shadow: 0px 0px 3px rgb(49, 139, 241, 0.15);
   transition: box-shadow 0.15s ease-in-out;
 }
-.shujubiao.active {
+.shujubiao_bingtu.active {
   box-shadow: 0px 0px 6px rgb(49, 139, 241);
 }
 .title {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 65px;
+  height: 30px;
   border-right: 1px solid #e8eaed;
-  padding: 0px 25px 0px 10px;
   font-size: 12px;
 }
 .field {
   display: flex;
-  padding: 0px 10px;
+  justify-content: space-between;
+  align-items: center;
+  width: 170px;
   font-size: 12px;
   background-color: #e4edfa;
   border-radius: 20px;
@@ -220,7 +240,7 @@ export default {
   line-height: 22px;
 }
 .field:hover {
-  cursor: move;
+  cursor: move !important;
 }
 .forbid {
   color: #9ea6b2;
@@ -229,7 +249,7 @@ export default {
   margin-left: 0;
 }
 .forbid:hover {
-  cursor: pointer;
+  cursor: pointer !important;
 }
 .elseChart {
   margin-bottom: 15px;
@@ -254,7 +274,12 @@ export default {
 .y.active {
   box-shadow: 0px 0px 6px rgb(49, 139, 241);
 }
-#hide {
-  display: none !important;
+.group {
+  width: 81%;
+  display: flex;
+  height: 30px;
+  padding-left: 10px;
+  position: absolute;
+  align-items: center;
 }
 </style>

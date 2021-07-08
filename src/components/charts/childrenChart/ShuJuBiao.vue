@@ -42,7 +42,6 @@ export default {
       currentPage: 1,
       currentLimit: 100,
       count: 0,
-      filterArr1: [],
       loading: false,
     };
   },
@@ -57,11 +56,7 @@ export default {
   },
   watch: {
     // 监听vuex中arr1的变化
-    vuexArr1(newValue) {
-      this.filterArr1 = newValue.filter((item) => {
-        // 过滤不需要的字段
-        return item.column_name !== "请拖入左侧字段";
-      });
+    vuexArr1() {
       this.getData();
     },
     currentPage() {
@@ -75,22 +70,27 @@ export default {
     getData() {
       // 加载动画
       this.loading = true;
-      const { currentPage, currentLimit, tableName, filterArr1 } = this;
+      const { currentPage, currentLimit, tableName } = this;
       getShuJuBiao({
         page: currentPage,
         limit: currentLimit,
         tableName: tableName,
-        fields: filterArr1,
-      }).then((res) => {
-        const { data, count } = res.data;
-        this.count = count;
-        this.tableData = data;
-        // 将字段取出
-        this.tableField = filterArr1.map((item) => {
-          return item.column_name;
+        fields: this.$store.state.arr1,
+      })
+        .then((res) => {
+          const { data, count } = res.data;
+          this.count = count;
+          this.tableData = data;
+          // 将字段取出
+          this.tableField = this.$store.state.arr1.map((item) => {
+            return item.column_name;
+          });
+          this.loading = false;
+        })
+        .catch(() => {
+          this.loading = false;
+          this.$message.error("请求超时");
         });
-        this.loading = false;
-      });
     },
     handleSizeChange(val) {
       // 每页条数

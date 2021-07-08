@@ -9,17 +9,19 @@ const routes = [
     component: () => import('@/views/login/Login.vue'),
   },
   {
-    path: '/test',
-    component: () => import('@/Test.vue'),
-  },
-  {
     path: '/admin',
     component: () => import('@/views/admin/Admin.vue'),
-    redirect: '/admin/index',
+    redirect: '/admin/dashboard',
     children: [
       {
-        path: 'index',
-        component: () => import('@/views/admin/main/Index.vue'),
+        path: 'dashboard',
+        component: () => import('@/views/admin/main/DashBoard.vue'),
+        children: [
+          {
+            path: ':dashboardName',
+            component: () => import('@/components/dashboard/DashBoardContent.vue'),
+          }
+        ]
       },
       {
         path: 'database',

@@ -4,6 +4,7 @@
     :visible.sync="dialogVisible"
     width="70%"
     top="50px"
+    :close-on-click-modal="false"
   >
     <el-form :model="form" label-position="left">
       <el-form-item
@@ -26,7 +27,7 @@
             :tableFields="tableFields"
             :currentIndex="index"
             :hideDropdownBtn="true"
-            @click.native="fieldClick(item.column_name)"
+            @click.native="fieldClick(item)"
           >
             {{ item.column_name }}
           </field-item>
@@ -34,16 +35,21 @@
 
         <!-- 内容区域 -->
         <div id="content">
-          <ul>
-            <li
-              v-for="(item, index) in arr"
-              :key="index"
-              @click="computerClick(item)"
+          <div class="content-header">
+            <ul>
+              <li
+                v-for="(item, index) in arr"
+                :key="index"
+                @click="computerClick(item)"
+              >
+                {{ item }}
+              </li>
+            </ul>
+            <el-button type="primary" size="mini" @click="clearField"
+              >清除所有字段</el-button
             >
-              {{ item }}
-            </li>
-          </ul>
-          <div>
+          </div>
+          <div class="content-body">
             <field
               v-for="(item, index) in contentArr"
               :key="index"
@@ -73,6 +79,7 @@ export default {
       },
       tableFields: [],
       contentArr: [],
+      typeArr: [], // 与内容相对于的类型数组
       arr: ["+", "-", "*", "/"],
     };
   },
@@ -97,21 +104,82 @@ export default {
       }
       this.$emit("noticeChange", newValue);
     },
+    contentArr(a) {
+      console.log(a);
+    }
   },
   methods: {
-    fieldClick(name) {
-      this.contentArr.push(name);
+    fieldClick({ column_name, data_type }) {
+      this.contentArr.push(column_name);
+      this.typeArr.push(data_type);
     },
     computerClick(name) {
+      // + - * /
       this.contentArr.push(name);
+      this.typeArr.push(name);
     },
     doubleClick(index) {
-      this.contentArr.splice(index, 1)
-      console.log(contentArr);
+      this.contentArr.splice(index, 1);
+      this.typeArr.splice(index, 1);
     },
     createField() {
-      this.dialogVisible = false;
-      this.$message.success("创建成功");
+      if (this.formatRule(this.contentArr)) {
+        if (this.typeRule(this.typeArr)) {
+          this.dialogVisible = false;
+          this.clearField();
+          this.$message.success("创建成功");
+        } else {
+          this.$message.warning('类型错误,( - * / ) 运算符只能用在数字类型字段上')
+        }
+      } else {
+        this.$message.warning("格式错误, 请检查格式之后重新创建");
+      }
+    },
+    // 格式限制
+    formatRule(arr) {
+      // 长度为偶数则格式错误
+      if (arr.length % 2 === 0) {
+        return false;
+      }
+      for (let i = 0; i < arr.length; i++) {
+        if (
+          i % 2 === 0 &&
+          (arr[i] == "+" || arr[i] == "-" || arr[i] == "*" || arr[i] == "/")
+        ) {
+          // 偶数 0, 2, 4  但作为索引为奇数 奇数必须为字段
+          return false;
+        }
+
+        //  作为索引为偶数 偶数必须运算符
+        if (i % 2 !== 0) {
+          switch (arr[i]) {
+            case "+":
+            case "-":
+            case "*":
+            case "/":
+              break;
+            default:
+              return false;
+          }
+        }
+      }
+      return true;
+    },
+    // 类型限制
+    typeRule(arr) {
+      for(let i =0 ; i < arr.length; i++) {
+        // 如果运算符 有 -, * , /
+        if(i % 2 != 0 && (arr[i] === '-' || arr[i] === '*' || arr[i] === '/')) {
+          // 如果有int类型 则返回false
+          return arr.indexOf('varchar') === -1
+        }
+      }
+      return true
+    },
+    clearField() {
+      // 清空数组
+      this.contentArr.splice(0, this.contentArr.length);
+      this.typeArr.splice(0, this.typeArr.length);
     },
   },
 };
@@ -135,9 +203,13 @@ export default {
   width: 77%;
   height: 300px;
 }
-#content > ul {
+#content > .content-header {
   display: flex;
+  justify-content: space-between;
   border-bottom: 1px solid #cedae0;
+}
+#content > .content-header > ul {
+  display: flex;
 }
 #content li {
   display: flex;
@@ -152,7 +224,7 @@ export default {
   border-radius: 5px;
   cursor: pointer;
 }
-#content > div {
+#content > .content-body {
   display: flex;
   flex-wrap: wrap;
   padding: 5px;

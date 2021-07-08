@@ -48,20 +48,31 @@
           ></icon-chart>
         </div>
       </div>
+
       <!-- 图表存放字段区 -->
       <div class="chart-column">
         <chart-field
           :chart="currentChart"
           @rightToLeft="rightToLeft"
+          ref="chartField"
         ></chart-field>
       </div>
+
       <!-- 图表展示区 -->
       <div class="write-chart">
-        <write-chart :chart="currentChart"></write-chart>
+        <write-chart
+          :chart="currentChart"
+          :loadChart="loadChartName"
+        ></write-chart>
       </div>
 
       <!-- 提示框 -->
-      <el-dialog title="提示" :visible.sync="dialogVisible" width="30%">
+      <el-dialog
+        title="提示"
+        :visible.sync="dialogVisible"
+        width="30%"
+        :close-on-click-modal="false"
+      >
         <span>切换图表需要重新选择字段,之前字段会被清空,请问要继续吗?</span>
         <span slot="footer" class="dialog-footer">
           <el-button @click="dialogVisible = false">取 消</el-button>
@@ -72,7 +83,10 @@
       </el-dialog>
 
       <!-- 计算字段对话框 -->
-      <computed-field :visible="computedDialog" @noticeChange="computedDialogChange"></computed-field>
+      <computed-field
+        :visible="computedDialog"
+        @noticeChange="computedDialogChange"
+      ></computed-field>
     </el-main>
   </el-container>
 </template>
@@ -93,16 +107,17 @@ export default {
       tableName: "",
       iconNames: [
         "#icon-zu",
+        "#icon-bingtu",
         "#icon-zhuxingtu",
         "#icon-zhexiantu",
         "#icon-mianjitu",
-        "#icon-bingtu",
         "#icon-duoxiliesandiantu",
       ],
       currentChart: 0,
       targetChart: 0,
       dialogVisible: false,
       computedDialog: false,
+      loadChartName: "", //加载图表的名称
     };
   },
   components: {
@@ -121,28 +136,70 @@ export default {
       background: "rgba(0, 0, 0, 0.7)",
     });
     this.tableName = this.$route.query.tableName;
-    getTableColumn(this.$route.query.tableName).then((res) => {
-      const { data } = res;
-      if (data.msg === "false") {
-        this.$router.push("/admin/charts");
-        this.$message.warning("请求的表不存在, 请检查!");
-        return;
-      }
-      this.tableColumn = data;
-      // 数字的默认类型是求和
-      data.map((item) => {
-        return item.data_type === "int"
-          ? (item.type = "求和")
-          : (item.type = "");
+    getTableColumn(this.$route.query.tableName)
+      .then((res) => {
+        const { data } = res;
+        if (data.msg === "false") {
+          this.$router.push("/admin/charts");
+          this.$message.warning("请求的表不存在, 请检查!");
+          return;
+        }
+        this.tableColumn = data;
+        // 数字的默认类型是求和
+        data.map((item) => {
+          return item.data_type === "int"
+            ? (item.type = "求和")
+            : (item.type = "");
+        });
+        this.$store.commit("setTableFields", data);
+        loading.close();
+      })
+      .catch(() => {
+        loading.close();
+        this.$message.error("请求超时");
       });
-      this.$store.commit("setTableFields", data);
-      loading.close();
-    });
   },
   watch: {
     // 监听数据变化 反映到vuex上
     tableColumn(newValue) {
       this.$store.commit("setTableFields", newValue);
+    },
+    currentChart(newChartIndex, oldChartIndex) {
+      const { arr1, arr2, arr3 } = this.$store.state;
+      if (newChartIndex === 0 && oldChartIndex === 1 && arr1.length > 0) {
+        this.loadChartName = "shujubiao";
+      }
+      if (newChartIndex === 1 && oldChartIndex === 0 && arr1.length > 0) {
+        this.loadChartName = "bingtu";
+      }
+      if (
+        newChartIndex === 2 &&
+        (oldChartIndex === 4 || oldChartIndex === 3 || oldChartIndex == 5) &&
+        (arr2.length > 0 || arr3.length > 0)
+      ) {
+        this.loadChartName = "zhuxingtu";
+      }
+      if (
+        newChartIndex === 3 &&
+        (oldChartIndex === 2 || oldChartIndex === 4 || oldChartIndex == 5) &&
+        (arr2.length > 0 || arr3.length > 0)
+      ) {
+        this.loadChartName = "zhexiantu";
+      }
+      if (
+        newChartIndex === 4 &&
+        (oldChartIndex === 3 || oldChartIndex === 2 || oldChartIndex == 5) &&
+        (arr2.length > 0 || arr3.length > 0)
+      ) {
+        this.loadChartName = "mianjitu";
+      }
+      if (
+        newChartIndex === 5 &&
+        (oldChartIndex === 2 || oldChartIndex === 3 || oldChartIndex == 4) &&
+        (arr2.length > 0 || arr3.length > 0)
+      ) {
+        this.loadChartName = "sandiantu";
+      }
     },
   },
   methods: {
@@ -151,15 +208,21 @@ export default {
       this.targetChart = index;
       const { currentChart, targetChart } = this;
       const { arr1, arr2, arr3 } = this.$store.state;
-      if (currentChart === 0 && targetChart > 0 && arr1.length > 1) {
+      if (currentChart === 0 && targetChart != 1 && arr1.length > 0) {
         // 当前图表处于数据表, 并且用户已经选择了字段
         this.dialogVisible = true;
         return;
       }
+      if (currentChart === 1 && targetChart != 0 && arr1.length > 0) {
+        // 当前图表处于饼图, 并且用户已经选择了字段
+        this.dialogVisible = true;
+        return;
+      }
       if (
-        currentChart > 0 &&
-        targetChart === 0 &&
-        (arr2.length > 1 || arr3.length > 1)
+        currentChart != 0 &&
+        currentChart != 1 &&
+        (targetChart === 0 || targetChart === 1) &&
+        (arr2.length > 0 || arr3.length > 0)
       ) {
         // 当前图表处于其他图表, 并且用户已经选择了字段
         this.dialogVisible = true;
@@ -175,25 +238,13 @@ export default {
       this.currentChart = this.targetChart;
       // 清除其他图表的字段
       const { commit } = this.$store;
-      if (this.currentChart === 0) {
-        // 现在图表是数据表, 则清除其他图表的数组
-        commit("setArr2", [
-          {
-            column_name: "请拖入左侧字段",
-          },
-        ]);
-        commit("setArr3", [
-          {
-            column_name: "请拖入左侧字段",
-          },
-        ]);
+      if (this.currentChart === 0 || this.currentChart === 1) {
+        // 现在图表是数据表和饼图, 则清除其他图表的数组
+        commit("setArr2", []);
+        commit("setArr3", []);
       } else {
         // 现在图表是其他图表, 则清除数据表的数组
-        commit("setArr1", [
-          {
-            column_name: "请拖入左侧字段",
-          },
-        ]);
+        commit("setArr1", []);
       }
     },
     // 右到左去重
@@ -206,8 +257,10 @@ export default {
     },
     start() {
       // 刚开始拖拽高亮显示可拖拽区域
-      if (this.currentChart === 0) {
-        document.getElementsByClassName("shujubiao")[0].classList.add("active");
+      if (this.currentChart === 0 || this.currentChart === 1) {
+        document
+          .getElementsByClassName("shujubiao_bingtu")[0]
+          .classList.add("active");
       } else {
         document.getElementsByClassName("x")[0].classList.add("active");
         document.getElementsByClassName("y")[0].classList.add("active");
@@ -215,9 +268,9 @@ export default {
     },
     end() {
       // 结束时去掉样式
-      if (this.currentChart === 0) {
+      if (this.currentChart === 0 || this.currentChart === 1) {
         document
-          .getElementsByClassName("shujubiao")[0]
+          .getElementsByClassName("shujubiao_bingtu")[0]
           .classList.remove("active");
       } else {
         document.getElementsByClassName("x")[0].classList.remove("active");
@@ -232,11 +285,11 @@ export default {
     },
     // 计算字段按钮点击
     computedFieldClick() {
-      this.computedDialog = !this.computedDialog
+      this.computedDialog = !this.computedDialog;
     },
     computedDialogChange(visible) {
-      this.computedDialog = visible
-    }
+      this.computedDialog = visible;
+    },
   },
 };
 </script>
@@ -277,12 +330,12 @@ export default {
 /* 从左边拖到右边的样式 */
 .ghost {
   display: flex;
+  width: 180px;
+  align-items: center;
   padding: 0px 10px;
   font-size: 13px;
   background-color: #e4edfa;
   border-radius: 20px;
   margin-left: 4px;
-  height: 22px;
-  line-height: 22px;
 }
 </style>

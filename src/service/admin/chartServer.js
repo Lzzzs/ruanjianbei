@@ -43,3 +43,31 @@ export const createZhuXingTu = data => request(
     data
   }
 )
+export const createZheXianTu = data => request(
+  {
+    url: 'zhexiantu',
+    method: "post",
+    data
+  }
+)
+export const createMianJiTu = data => request(
+  {
+    url: 'mianjitu',
+    method: "post",
+    data
+  }
+)
+export const createSanDianTu = data => request(
+  {
+    url: 'sandiantu',
+    method: "post",
+    data
+  }
+)
+export const createBingTu = data => request(
+  {
+    url: 'bingtu',
+    method: "post",
+    data
+  }
+)

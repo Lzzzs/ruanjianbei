@@ -1,6 +1,6 @@
 <template>
   <li :class="isShow ? 'active' : ''" :style="deleteDrop">
-    <div style="display: flex">
+    <div style="display: flex; align-items: center;">
       <svg
         class="icon"
         aria-hidden="true"
@@ -13,7 +13,7 @@
       </div>
     </div>
     <div id="computed" :class="currentType === 'int' ? 'show' : ''">
-      {{ this.$store.state.tableFields[currentIndex].type }}
+      {{ this.tableFields[currentIndex].type }}
     </div>
     <el-dropdown
       class="dropdown"
@@ -62,7 +62,7 @@
     </el-dropdown>
 
     <!-- 重命名对话框 -->
-    <el-dialog :title="dialogTitle" :visible.sync="renameDialog">
+    <el-dialog :title="dialogTitle" :visible.sync="renameDialog" :close-on-click-modal="false">
       <el-form :model="renameForm">
         <el-form-item label="字段名" label-width="120px">
           <el-input
@@ -109,8 +109,8 @@ export default {
     // 是否隐藏下拉按钮
     hideDropdownBtn: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   mounted() {
     this.currentName = this.tableFields[this.currentIndex].column_name;
@@ -133,8 +133,8 @@ export default {
     },
     deleteDrop() {
       // 如果不需要下拉菜单 则取消改组件获得焦点之后鼠标变成移动样式
-      return this.hideDropdownBtn ? 'cursor: pointer' : ''
-    }
+      return this.hideDropdownBtn ? "cursor: pointer" : "";
+    },
   },
   methods: {
     getShow(isShow) {
@@ -169,20 +169,25 @@ export default {
         background: "rgba(0, 0, 0, 0.7)",
       });
       // 发送请求修改数据库里的字段
-      chongmingm(this.renameForm).then((res) => {
-        if (res.data.msg) {
-          const { newColumn, oldColumn } = this.renameForm;
-          // 修改vuex里面的表格字段
-          this.$store.commit("renameField", {
-            newColumn,
-            oldColumn,
-          });
-          this.$message.success("修改成功");
-        } else {
-          this.$message.error("修改失败");
-        }
-        loading.close();
-      });
+      chongmingm(this.renameForm)
+        .then((res) => {
+          if (res.data.msg) {
+            const { newColumn, oldColumn } = this.renameForm;
+            // 修改vuex里面的表格字段
+            this.$store.commit("renameField", {
+              newColumn,
+              oldColumn,
+            });
+            this.$message.success("修改成功");
+          } else {
+            this.$message.error("修改失败");
+          }
+          loading.close();
+        })
+        .catch(() => {
+          loading.close();
+          this.$message.error("请求超时");
+        });
     },
   },
 };

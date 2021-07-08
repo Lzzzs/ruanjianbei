@@ -19,7 +19,7 @@
           @select="handleSelect"
           router
         >
-          <el-menu-item index="/admin/index">首页</el-menu-item>
+          <el-menu-item index="/admin/dashboard">仪表盘</el-menu-item>
           <el-submenu index="2">
             <template slot="title">数据准备</template>
             <el-menu-item index="/admin/database">数据库</el-menu-item>
@@ -37,7 +37,7 @@
 export default {
   data() {
     return {
-      activeIndex: "/admin/index",
+      activeIndex: "/admin/dashboard",
     };
   },
   methods: {

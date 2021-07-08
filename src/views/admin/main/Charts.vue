@@ -16,7 +16,9 @@
       <div v-if="$route.params.tableName">
         <div class="top">
           <h3>{{ $route.params.tableName }}</h3>
-          <el-button type="primary" @click="createChart" :disabled="loading">生成图表</el-button>
+          <el-button type="primary" @click="createChart" :disabled="loading"
+            >生成图表</el-button
+          >
         </div>
         <!-- 展示表格 -->
         <el-table
@@ -64,7 +66,7 @@ export default {
       currentPage: 1,
       currentLimit: 100,
       count: 0,
-      loading: false
+      loading: false,
     };
   },
   created() {
@@ -75,28 +77,38 @@ export default {
       background: "rgba(0, 0, 0, 0.7)",
     });
     // 获取表名
-    getTableName().then((res) => {
-      loading.close();
-      this.list = res.data;
-    });
+    getTableName()
+      .then((res) => {
+        loading.close();
+        this.list = res.data;
+      })
+      .catch(() => {
+        loading.close();
+        this.$message.error("请求超时");
+      });
   },
   methods: {
     getData() {
       // 加载动画
-      this.loading = true
+      this.loading = true;
       // 请求数据
       getTableData({
         page: this.currentPage,
         limit: this.currentLimit,
         tableName: this.tableName,
-      }).then((res) => {
-        const { count, data } = res.data;
-        this.count = count;
-        this.tableData = data;
-        // 将字段取出
-        this.tableField = Object.keys(res.data.data[0]);
-        this.loading = false
-      });
+      })
+        .then((res) => {
+          const { count, data } = res.data;
+          this.count = count;
+          this.tableData = data;
+          // 将字段取出
+          this.tableField = Object.keys(res.data.data[0]);
+          this.loading = false;
+        })
+        .catch(() => {
+          this.loading = false;
+          this.$message.error("请求超时");
+        });
     },
     tableClick(name, index) {
       if (this.currentIndex != index || this.currentIndex == "") {
@@ -112,16 +124,16 @@ export default {
     },
     handleCurrentChange(val) {
       // 第几页
-      this.currentPage = val; 
+      this.currentPage = val;
     },
     createChart() {
       this.$router.push({
-        path: '/admin/createChart',
+        path: "/admin/createChart",
         query: {
-          tableName: this.tableName
-        }
-      })
-    }
+          tableName: this.tableName,
+        },
+      });
+    },
   },
   watch: {
     currentPage() {

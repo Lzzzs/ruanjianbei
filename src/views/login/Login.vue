@@ -78,16 +78,21 @@ export default {
             background: "rgba(0, 0, 0, 0.7)",
           });
           // 发送登录请求
-          isLogin(this.ruleForm).then((res) => {
-            const { isLogin } = res.data;
-            if (isLogin) {
+          isLogin(this.ruleForm)
+            .then((res) => {
+              const { isLogin } = res.data;
+              if (isLogin) {
+                loading.close();
+                this.$router.push("/admin");
+              } else {
+                loading.close();
+                this.$message.error("用户名或者密码错误!");
+              }
+            })
+            .catch(() => {
               loading.close();
-              this.$router.push("/admin");
-            } else {
-              loading.close();
-              this.$message.error("用户名或者密码错误!")
-            }
-          });
+              this.$message.error("请求失败");
+            });
         } else {
           console.log("error submit!!");
           return false;
