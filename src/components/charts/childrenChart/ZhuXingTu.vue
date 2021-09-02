@@ -16,13 +16,14 @@ import {
   GridComponent,
 } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
-
+import { ToolboxComponent } from "echarts/components";
 echarts.use([
   TitleComponent,
   TooltipComponent,
   GridComponent,
   BarChart,
   CanvasRenderer,
+  ToolboxComponent,
 ]);
 import { createZhuXingTu } from "@/service/admin/chartServer.js";
 import { tuXingMixin } from "@/lib/mixin.js";

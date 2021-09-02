@@ -4,7 +4,7 @@
     <el-table
       :data="tableData"
       stripe
-      height="500"
+      height="100%"
       style="width: 100%; font-size: 12px"
       border
       size="mini"
@@ -45,8 +45,10 @@ export default {
       loading: false,
     };
   },
-  created() {
-    this.tableName = this.$route.query.tableName;
+  mounted() {
+    this.tableName = JSON.parse(
+      decodeURIComponent(this.$route.query.dashInfo)
+    ).tableName;
   },
   computed: {
     // 通过watch可以监听变化

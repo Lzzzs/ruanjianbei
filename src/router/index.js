@@ -24,12 +24,8 @@ const routes = [
         ]
       },
       {
-        path: 'database',
-        component: () => import('@/views/admin/main/DataBase.vue'),
-      },
-      {
-        path: 'uploadcsv',
-        component: () => import('@/views/admin/main/UploadCsv.vue'),
+        path: 'dataSetout',
+        component: () => import('@/views/admin/main/DataSetout.vue'),
       },
       {
         path: 'charts',

@@ -108,9 +108,6 @@ export default {
       default: 0,
     },
   },
-  mounted() {
-    this.initializeArr();
-  },
   computed: {
     // 监听vux的state中arr1的改变
     listenVuxArr1() {
@@ -155,9 +152,6 @@ export default {
       // 如果vux改变,则改组件也改变
       this.arr3 = newValue;
     },
-    chart() {
-      this.initializeArr();
-    },
   },
   methods: {
     // 从右向左
@@ -180,15 +174,6 @@ export default {
       }
       // 传给父组件做去重
       this.$emit("rightToLeft");
-    },
-    initializeArr() {
-      const { arr1, arr2, arr3 } = this.$store.state;
-      if (this.chart === 0 || this.chart === 1) {
-        this.arr1 = arr1;
-      } else {
-        this.arr2 = arr2;
-        this.arr3 = arr3;
-      }
     },
     // 输出tableField数组
     outputTableFieldArr(a) {

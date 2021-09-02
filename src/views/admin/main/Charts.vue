@@ -13,7 +13,7 @@
       </ul>
     </el-aside>
     <el-main style="padding: 0 10px">
-      <div v-if="$route.params.tableName">
+      <div v-if="$route.params.tableName" style="height: 97%">
         <div class="top">
           <h3>{{ $route.params.tableName }}</h3>
           <el-button type="primary" @click="createChart" :disabled="loading"
@@ -24,7 +24,7 @@
         <el-table
           :data="tableData"
           stripe
-          height="510"
+          height="83%"
           style="width: 100%"
           border
           v-loading="loading"
@@ -50,11 +50,48 @@
         </el-pagination>
       </div>
     </el-main>
+
+    <!-- 添加组件 -->
+    <el-dialog
+      title="添加组件"
+      :visible.sync="addComponentVisible"
+      width="30%"
+      :close-on-click-modal="false"
+    >
+      <el-form :model="addComponentForm" :rules="rules" ref="addComponent">
+        <el-form-item label-width="90px" label="仪表盘" prop="dashBoardId">
+          <el-select
+            v-model="addComponentForm.dashBoardId"
+            placeholder="请选择仪表盘"
+          >
+            <el-option
+              v-for="item in dashboardData"
+              :key="item.dash_id"
+              :label="item.dash_name"
+              :value="item.dash_id"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="组件名称" label-width="90px" prop="componentName">
+          <el-input
+            v-model="addComponentForm.componentName"
+            autocomplete="off"
+            placeholder="请输入组件的名称"
+          ></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="addComponentVisible = false">取 消</el-button>
+        <el-button type="primary" @click="confirmAddComponent">确 定</el-button>
+      </span>
+    </el-dialog>
   </el-container>
 </template>
 
 <script>
 import { getTableName, getTableData } from "@/service/admin/chartServer.js";
+import { findAllDashBoardsServer } from "@/service/admin/dashBoardServer.js";
 export default {
   data() {
     return {
@@ -67,6 +104,20 @@ export default {
       currentLimit: 100,
       count: 0,
       loading: false,
+      dashboardData: [],
+      addComponentForm: {
+        componentName: "",
+        dashBoardId: "",
+      },
+      addComponentVisible: false,
+      rules: {
+        dashBoardId: [
+          { required: true, message: "请选择仪表盘", trigger: "blur" },
+        ],
+        componentName: [
+          { required: true, message: "请输入组件名称", trigger: "blur" },
+        ],
+      },
     };
   },
   created() {
@@ -86,6 +137,7 @@ export default {
         loading.close();
         this.$message.error("请求超时");
       });
+    this.getDashBoardData();
   },
   methods: {
     getData() {
@@ -110,6 +162,15 @@ export default {
           this.$message.error("请求超时");
         });
     },
+    getDashBoardData() {
+      findAllDashBoardsServer()
+        .then((res) => {
+          this.dashboardData = res.data;
+        })
+        .catch(() => {
+          this.$message.error("请求超时");
+        });
+    },
     tableClick(name, index) {
       if (this.currentIndex != index || this.currentIndex == "") {
         this.currentIndex = index;
@@ -127,11 +188,40 @@ export default {
       this.currentPage = val;
     },
     createChart() {
-      this.$router.push({
-        path: "/admin/createChart",
-        query: {
-          tableName: this.tableName,
-        },
+      this.addComponentVisible = true;
+    },
+    confirmAddComponent() {
+      this.$refs.addComponent.validate((vaild) => {
+        if (vaild) {
+          const dashInfo = {
+            meter_id: [],
+            dashBoardID: [],
+            componentName: [],
+            tablename: [],
+            name: [],
+            contentArr: [],
+            currentchart: 0,
+            file: [], // 对应数据表和饼图的字段数组
+            filex: [], // 对应其他图表的x轴
+            filey: [], // 对应其他图表的y轴
+          };
+          const { componentName, dashBoardId } = this.addComponentForm;
+          dashInfo.dashBoardID[0] = dashBoardId;
+          dashInfo.componentName[0] = componentName;
+          if (!this.tableName) {
+            this.$message.error("请选择表数据");
+            return false;
+          }
+          dashInfo.tablename[0] = this.tableName;
+          this.$router.push({
+            path: "/admin/createChart",
+            query: {
+              dashInfo: encodeURIComponent(JSON.stringify(dashInfo)),
+            },
+          });
+        } else {
+          return false;
+        }
       });
     },
   },

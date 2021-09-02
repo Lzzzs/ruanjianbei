@@ -1,44 +1,47 @@
 <template>
   <div>
-    <div id="mianjitu" v-loading="Loading" v-show="!isShowTip"></div>
+    <div id="zhuxingtu" v-loading="Loading" v-show="!isShowTip"></div>
     <div class="tip" v-show="isShowTip">
-      请拖入左侧字段至字段存放区, 将自动生成图形
+      仪表暂无图表,请点击编辑进行绘制图表
     </div>
   </div>
 </template>
 
 <script>
 import * as echarts from "echarts/core";
-import { GridComponent } from "echarts/components";
-import { LineChart } from "echarts/charts";
+import { BarChart } from "echarts/charts";
+import {
+  TitleComponent,
+  TooltipComponent,
+  GridComponent,
+} from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
 import { ToolboxComponent } from "echarts/components";
-echarts.use([GridComponent, LineChart, CanvasRenderer, ToolboxComponent]);
-import { createMianJiTu } from "@/service/admin/chartServer.js";
-import { tuXingMixin } from "@/lib/mixin.js";
+echarts.use([
+  TitleComponent,
+  TooltipComponent,
+  GridComponent,
+  BarChart,
+  CanvasRenderer,
+  ToolboxComponent,
+]);
+import { createZhuXingTu } from "@/service/admin/chartServer.js";
+import { miniTuXingMixin } from "@/lib/mixin.js";
 export default {
-  mixins: [tuXingMixin],  
+  mixins: [miniTuXingMixin],
   methods: {
     getData() {
       // 关闭提示
       this.isShowTip = false;
       // 加载动画
       this.Loading = true;
-      const tableName = this.tableName;
-      const xFileds = this.$store.state.arr2;
-      const yFileds = this.$store.state.arr3;
-      const obj = {
-        tableName,
-        xFileds,
-        yFileds,
-      };
-      createMianJiTu(obj)
+      createZhuXingTu(this.createObj)
         .then((res) => {
           if (res.data.error === undefined) {
             this.writeData = res.data;
           } else {
-            // 开启提示
-            this.isShowTip = true;
+            // 关闭提示
+            this.isShowTip = false;
             // 关闭动画
             this.Loading = false;
           }
@@ -49,9 +52,8 @@ export default {
         });
     },
     wirteGraph() {
-      this.options.series[0].type = "line"; // 设置为面积图
-      this.options.series[0].areaStyle = {}; // 设置为面积图
-      const myChart = echarts.init(document.getElementById("mianjitu"));
+      this.options.series[0].type = "bar"; // 设置为柱形图
+      const myChart = echarts.init(document.getElementById("zhuxingtu"));
       myChart.setOption(this.options);
     },
   },
@@ -59,7 +61,7 @@ export default {
 </script>
 
 <style scoped>
-#mianjitu {
+#zhuxingtu {
   width: 100%;
   height: 100%;
 }

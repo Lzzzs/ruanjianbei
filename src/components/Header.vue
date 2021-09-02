@@ -20,16 +20,21 @@
           router
         >
           <el-menu-item index="/admin/dashboard">仪表盘</el-menu-item>
-          <el-submenu index="2">
-            <template slot="title">数据准备</template>
-            <el-menu-item index="/admin/database">数据库</el-menu-item>
-            <el-menu-item index="/admin/uploadcsv">上传csv</el-menu-item>
-          </el-submenu>
+          <el-menu-item index="/admin/dataSetout">数据准备</el-menu-item>
           <el-menu-item index="/admin/charts">图表生成</el-menu-item>
         </el-menu>
       </li>
     </ul>
-    <div class="header-right">个人中心</div>
+    <div class="header-right">
+      <el-dropdown size="small" trigger="click">
+        <span class="el-dropdown-link">
+          admin<i class="el-icon-arrow-down el-icon--right"></i>
+        </span>
+        <el-dropdown-menu slot="dropdown" size="small">
+          <el-dropdown-item @click.native="loginOut">退出</el-dropdown-item>
+        </el-dropdown-menu>
+      </el-dropdown>
+    </div>
   </el-header>
 </template>
 
@@ -42,8 +47,12 @@ export default {
   },
   methods: {
     handleSelect(key) {
-      this.activeIndex = key
+      this.activeIndex = key;
     },
+    loginOut() {
+      // 退出
+      this.$router.replace('/')
+    }
   },
 };
 </script>
@@ -57,5 +66,12 @@ export default {
 }
 .header-left {
   display: flex;
+}
+.el-dropdown-link {
+  cursor: pointer;
+  color: #303133;
+}
+.el-icon-arrow-down {
+  font-size: 12px;
 }
 </style>

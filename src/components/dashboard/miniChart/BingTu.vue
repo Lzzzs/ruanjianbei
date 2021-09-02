@@ -1,8 +1,8 @@
 <template>
-  <div style="height: 110%; width: 100%">
+  <div style="height: 100%; width: 100%">
     <div id="bingtu" v-loading="Loading" v-show="!isShowTip"></div>
     <div class="tip" v-show="isShowTip">
-      请拖入左侧字段至字段存放区, 将自动生成图形
+      仪表暂无图表,请点击编辑进行绘制图表
     </div>
   </div>
 </template>
@@ -71,40 +71,20 @@ export default {
           },
         ],
       },
-      tableName: "",
       writeData: {},
       Loading: false,
       isShowTip: true,
-      oldArr1: [],
     };
   },
-  mounted() {
-    this.tableName = JSON.parse(
-      decodeURIComponent(this.$route.query.dashInfo)
-    ).tableName;
-  },
-  computed: {
-    listenVuexArr1() {
-      return this.$store.state.arr1;
+  props: {
+    createObj: {
+      type: Object,
+      default() {
+        return {};
+      },
     },
   },
   watch: {
-    listenVuexArr1(newValue, oldValue) {
-      this.oldArr1 = oldValue;
-      let num = 0;
-      newValue.map((item) => {
-        if (item.data_type === "varchar") {
-          num++;
-        }
-      });
-      if (num > 1) {
-        this.$message.warning(
-          "饼图暂时只支持对一个字符字段进行分析,数字字段可以多个"
-        );
-        this.$store.commit("setArr1", oldValue);
-      }
-      this.getData();
-    },
     writeData(newValue) {
       if (newValue != {}) {
         const { data } = newValue;
@@ -117,19 +97,11 @@ export default {
               name: item.name[0],
             });
           } else {
-            if (item.data.length < 100) {
-              for (const v of item.data) {
-                this.options.series[0].data.push({
-                  value: 1,
-                  name: v,
-                });
-              }
-            } else {
-              this.$message.warning(
-                "为保证流畅速度, 饼图暂不支持超过一百个字符的分析, 请重新选择字段"
-              );
-              this.$store.commit("setArr1", this.oldArr1);
-              return;
+            for (const v of item.data) {
+              this.options.series[0].data.push({
+                value: 1,
+                name: v,
+              });
             }
           }
         });
@@ -146,13 +118,7 @@ export default {
       this.isShowTip = false;
       // 加载动画
       this.Loading = true;
-      const tableName = this.tableName;
-      const Fields = this.$store.state.arr1;
-      const obj = {
-        tableName,
-        Fields,
-      };
-      createBingTu(obj)
+      createBingTu(this.createObj)
         .then((res) => {
           if (res.data.error === undefined) {
             this.writeData = res.data;
@@ -170,8 +136,7 @@ export default {
     },
     // 验证字段类型
     ruleFieldType(fieldName) {
-      const { tableFields } = this.$store.state;
-      for (let i of tableFields) {
+      for (let i of this.createObj.Fields) {
         if (i.column_name === fieldName) {
           return i.data_type;
         }

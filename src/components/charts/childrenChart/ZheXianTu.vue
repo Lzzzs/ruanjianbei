@@ -12,8 +12,8 @@ import * as echarts from "echarts/core";
 import { TooltipComponent, GridComponent } from "echarts/components";
 import { LineChart } from "echarts/charts";
 import { CanvasRenderer } from "echarts/renderers";
-
-echarts.use([TooltipComponent, GridComponent, LineChart, CanvasRenderer]);
+import { ToolboxComponent } from "echarts/components";
+echarts.use([TooltipComponent, GridComponent, LineChart, CanvasRenderer, ToolboxComponent]);
 import { createZheXianTu } from "@/service/admin/chartServer.js";
 import { tuXingMixin } from "@/lib/mixin.js";
 export default {

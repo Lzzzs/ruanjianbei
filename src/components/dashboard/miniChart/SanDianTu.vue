@@ -2,7 +2,7 @@
   <div>
     <div id="sandiantu" v-loading="Loading" v-show="!isShowTip"></div>
     <div class="tip" v-show="isShowTip">
-      请拖入左侧字段至字段存放区, 将自动生成图形
+      仪表暂无图表,请点击编辑进行绘制图表
     </div>
   </div>
 </template>
@@ -25,10 +25,9 @@ export default {
             dataZoom: {
               yAxisIndex: "none",
             },
-            dataView: { readOnly: false },
             saveAsImage: {},
           },
-          right: "9%",
+          right: "2%",
         },
         tooltip: {
           trigger: "axis",
@@ -37,9 +36,10 @@ export default {
           },
         },
         grid: {
-          left: "2%",
-          right: "9%",
-          bottom: "4%",
+          left: "1%",
+          right: "16%",
+          bottom: "2%",
+          top: "3%",
           containLabel: true,
         },
         xAxis: {
@@ -59,46 +59,23 @@ export default {
           },
         ],
       },
-      tableName: "",
       writeData: {},
       Loading: false,
       isShowTip: true,
     };
   },
-  mounted() {
-    this.tableName = JSON.parse(
-      decodeURIComponent(this.$route.query.dashInfo)
-    ).tableName;
-    const { arr2, arr3 } = this.$store.state;
-    if (arr2.length > 0 || arr3.length > 0) {
-      this.getData();
-    }
+  props: {
+    createObj: {
+      type: Object,
+      default() {
+        return {};
+      },
+    },
   },
-  computed: {
-    listenVuexArr2() {
-      return this.$store.state.arr2;
-    },
-    listenVuexArr3() {
-      return this.$store.state.arr3;
-    },
+  mounted() {
+    this.getData();
   },
   watch: {
-    listenVuexArr2(newValue, oldValue) {
-      if (newValue.length > 1) {
-        this.$message.warning("该图表暂时只支持x和y轴最多存放一个字段");
-        this.$store.commit("setArr2", oldValue);
-        return;
-      }
-      this.getData();
-    },
-    listenVuexArr3(newValue, oldValue) {
-      if (newValue.length > 1) {
-        this.$message.warning("该图表暂时只支持x和y轴最多存放一个字段");
-        this.$store.commit("setArr3", oldValue);
-        return;
-      }
-      this.getData();
-    },
     writeData(newValue) {
       if (newValue != {}) {
         const { xdata, xfield, ydata, yfield } = newValue;
@@ -207,21 +184,13 @@ export default {
       this.isShowTip = false;
       // 加载动画
       this.Loading = true;
-      const tableName = this.tableName;
-      const xFileds = this.$store.state.arr2;
-      const yFileds = this.$store.state.arr3;
-      const obj = {
-        tableName,
-        xFileds,
-        yFileds,
-      };
-      createSanDianTu(obj)
+      createSanDianTu(this.createObj)
         .then((res) => {
           if (res.data.error === undefined) {
             this.writeData = res.data;
           } else {
-            // 开启提示
-            this.isShowTip = true;
+            // 关闭提示
+            this.isShowTip = false;
             // 关闭动画
             this.Loading = false;
           }
@@ -233,8 +202,10 @@ export default {
     },
     // 验证字段类型
     ruleFieldType(fieldName) {
-      const { tableFields } = this.$store.state;
-      for (let i of tableFields) {
+      const { xFileds, yFileds } = this.createObj;
+      // 合并arr2和arr3
+      const arr = xFileds.concat(yFileds);
+      for (let i of arr) {
         if (i.column_name === fieldName) {
           return i.data_type;
         }

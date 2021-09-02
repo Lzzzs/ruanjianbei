@@ -114,7 +114,7 @@ export default {
   },
   mounted() {
     this.currentName = this.tableFields[this.currentIndex].column_name;
-    this.renameForm.tableName = this.$route.query.tableName;
+    this.renameForm.tableName = JSON.parse(decodeURIComponent(this.$route.query.dashInfo)).tableName;
   },
   computed: {
     showIcon() {
